@@ -1,0 +1,134 @@
+Here's a basic implementation of a login page with authentication using Django as the backend, along with the logout functionality and a button to reach customer support via email.
+
+### 1. Setting Up Django Project
+First, create a new Django project and app:
+```bash
+django-admin startproject food_ordering
+cd food_ordering
+django-admin startapp accounts
+```
+
+### 2. Update `settings.py`
+Add `accounts` to your `INSTALLED_APPS` and configure the login and logout redirects:
+```python
+# food_ordering/settings.py
+INSTALLED_APPS = [
+    ...
+    'accounts',
+]
+
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'login'
+```
+
+### 3. Create User Authentication Views
+In your `accounts` app, create views for login and logout:
+```python
+# accounts/views.py
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
+
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('home')
+        else:
+            return HttpResponse('Invalid login credentials')
+    return render(request, 'accounts/login.html')
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+@login_required
+def home_view(request):
+    return render(request, 'accounts/home.html')
+
+@login_required
+def contact_support(request):
+    # Logic to handle contacting support
+    return HttpResponse('Contact support at support@example.com')
+```
+
+### 4. Create URL Patterns
+Define the URL patterns for the views:
+```python
+# accounts/urls.py
+from django.urls import path
+from .views import login_view, logout_view, home_view, contact_support
+
+urlpatterns = [
+    path('login/', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('home/', home_view, name='home'),
+    path('contact-support/', contact_support, name='contact_support'),
+]
+```
+
+Include these URLs in your main project URL configuration:
+```python
+# food_ordering/urls.py
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('accounts/', include('accounts.urls')),
+]
+```
+
+### 5. Create Templates
+Create the HTML templates for login, home, and contact support.
+
+#### `login.html`
+```html
+<!-- accounts/templates/accounts/login.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <form method="post">
+        {% csrf_token %}
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <button type="submit">Login</button>
+    </form>
+</body>
+</html>
+```
+
+#### `home.html`
+```html
+<!-- accounts/templates/accounts/home.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+</head>
+<body>
+    <h2>Welcome, {{ user.username }}!</h2>
+    <a href="{% url 'logout' %}">Logout</a>
+    <a href="{% url 'contact_support' %}">Contact Support</a>
+</body>
+</html>
+```
+
+### 6. Running the Application
+- Apply migrations: `python manage.py makemigrations` and `python manage.py migrate`
+- Create a superuser to test the login: `python manage.py createsuperuser`
+- Run the server: `python manage.py runserver`
+- Access the application at `http://localhost:8000/accounts/login/`
+
+This setup provides a basic login and logout functionality along with a button to contact customer support. You can further enhance the UI/UX and add more features as needed. If you have any questions or need further assistance, feel free to ask!
