@@ -1,0 +1,389 @@
+Yes, a full-fledged Java application for an online food ordering system can be written using Object-Oriented Programming (OOP) principles. This code can incorporate classes and objects, stacks and queues, exception handling, and file operations. Java doesn't have a direct equivalent of Python's `pickle` module, but we can use Java's serialization mechanism for similar functionality.
+
+### 1. Define Classes and Objects
+
+#### Category and Item Classes
+```java
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+class Category implements Serializable {
+    private String name;
+    private List<Item> items;
+
+    public Category(String name) {
+        this.name = name;
+        this.items = new ArrayList<>();
+    }
+
+    public void addItem(Item item) {
+        items.add(item);
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public List<Item> getItems() {
+        return items;
+    }
+
+    @Override
+    public String toString() {
+        return name;
+    }
+}
+
+class Item implements Serializable {
+    private String name;
+    private double price;
+
+    public Item(String name, double price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    @Override
+    public String toString() {
+        return name + " - $" + price;
+    }
+}
+```
+
+#### User and Order Classes
+```java
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+class User implements Serializable {
+    private String username;
+    private String password;
+    private List<Order> orders;
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+        this.orders = new ArrayList<>();
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void placeOrder(Order order) {
+        orders.add(order);
+    }
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    @Override
+    public String toString() {
+        return username;
+    }
+}
+
+class Order implements Serializable {
+    private User user;
+    private List<Item> items;
+    private String status;
+
+    public Order(User user) {
+        this.user = user;
+        this.items = new ArrayList<>();
+        this.status = "Pending";
+    }
+
+    public void addItem(Item item) {
+        items.add(item);
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public List<Item> getItems() {
+        return items;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Order by " + user.getUsername() + " - " + items.size() + " items - " + status;
+    }
+}
+```
+
+### 2. Implement Stacks and Queues
+
+#### Stack for Order History
+```java
+import java.util.Stack;
+
+class OrderHistory {
+    private Stack<Order> history;
+
+    public OrderHistory() {
+        this.history = new Stack<>();
+    }
+
+    public void push(Order order) {
+        history.push(order);
+    }
+
+    public Order pop() {
+        if (!history.isEmpty()) {
+            return history.pop();
+        } else {
+            throw new IndexOutOfBoundsException("No orders in history");
+        }
+    }
+
+    public boolean isEmpty() {
+        return history.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "Order History: " + history.size() + " orders";
+    }
+}
+```
+
+#### Queue for Order Processing
+```java
+import java.util.LinkedList;
+import java.util.Queue;
+
+class OrderQueue {
+    private Queue<Order> queue;
+
+    public OrderQueue() {
+        this.queue = new LinkedList<>();
+    }
+
+    public void enqueue(Order order) {
+        queue.add(order);
+    }
+
+    public Order dequeue() {
+        if (!queue.isEmpty()) {
+            return queue.poll();
+        } else {
+            throw new IndexOutOfBoundsException("No orders to process");
+        }
+    }
+
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "Order Queue: " + queue.size() + " orders";
+    }
+}
+```
+
+### 3. Exception Handling
+
+#### Custom Exceptions
+```java
+class UserNotFoundException extends Exception {
+    public UserNotFoundException(String message) {
+        super(message);
+    }
+}
+
+class InvalidCredentialsException extends Exception {
+    public InvalidCredentialsException(String message) {
+        super(message);
+    }
+}
+```
+
+### 4. File Operations and Serialization
+
+#### Saving and Loading Data
+```java
+import java.io.*;
+
+public class DataManager {
+    public static void saveData(String filename, Object data) throws IOException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(data);
+        }
+    }
+
+    public static Object loadData(String filename) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
+            return ois.readObject();
+        } catch (FileNotFoundException e) {
+            return null;
+        }
+    }
+}
+```
+
+### 5. Main Application Logic
+
+#### Putting It All Together
+```java
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class FoodOrderingApp {
+    private static List<Category> categories = new ArrayList<>();
+    private static List<User> users = new ArrayList<>();
+    private static OrderHistory orderHistory = new OrderHistory();
+    private static OrderQueue orderQueue = new OrderQueue();
+
+    public static void main(String[] args) {
+        initializeData();
+        loadUsers();
+
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("\n1. Register\n2. Login\n3. Exit");
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1":
+                    registerUser(scanner);
+                    break;
+                case "2":
+                    loginUser(scanner);
+                    break;
+                case "3":
+                    System.out.println("Exiting application.");
+                    saveUsers();
+                    return;
+                default:
+                    System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+
+    private static void initializeData() {
+        Category mainCourse = new Category("Main Course");
+        mainCourse.addItem(new Item("Grilled Chicken", 10.00));
+        mainCourse.addItem(new Item("Veggie Burger", 8.00));
+        mainCourse.addItem(new Item("Pasta Alfredo", 12.00));
+
+        Category beverages = new Category("Beverages");
+        beverages.addItem(new Item("Lemonade", 2.50));
+        beverages.addItem(new Item("Iced Tea", 2.00));
+        beverages.addItem(new Item("Coffee", 3.00));
+
+        Category salad = new Category("Salad");
+        salad.addItem(new Item("Caesar Salad", 5.00));
+        salad.addItem(new Item("Greek Salad", 6.00));
+        salad.addItem(new Item("Garden Salad", 4.50));
+
+        categories.add(mainCourse);
+        categories.add(beverages);
+        categories.add(salad);
+    }
+
+    private static void loadUsers() {
+        try {
+            users = (List<User>) DataManager.loadData("users.dat");
+            if (users == null) {
+                users = new ArrayList<>();
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void saveUsers() {
+        try {
+            DataManager.saveData("users.dat", users);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void registerUser(Scanner scanner) {
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+        users.add(new User(username, password));
+        saveUsers();
+        System.out.println("User registered successfully!");
+    }
+
+    private static void loginUser(Scanner scanner) {
+        System.out.print("Enter username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        User user = users.stream()
+                .filter(u -> u.getUsername().equals(username) && u.getPassword().equals(password))
+                .findFirst()
+                .orElse(null);
+
+        if (user != null) {
+            System.out.println("Welcome, " + user.getUsername() + "!");
+            userMenu(scanner, user);
+        } else {
+            System.out.println("Invalid credentials. Please try again.");
+        }
+    }
+
+    private static void userMenu(Scanner scanner, User user) {
+        while (true) {
+            System.out.println("\n1. Browse Items\n2. View Cart\n3. Place Order\n4. View Order History\n5. Logout");
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1":
+                    browseItems(scanner, user);
+                    break;
+                case "2":
+                    viewCart(user);
+                    break;
+                case "3":
+                    placeOrder(user);
+                    break;
+                case "4":
+                    viewOrderHistory();
+                    break;
+                case "5":
+                    System.out.println("Logged out.");
+                    return;
+                default:
+                    System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+
+    private static void browseItems(Scanner scanner, User user) {
+        for (Category category : categories) {
+            System.out.println("\
