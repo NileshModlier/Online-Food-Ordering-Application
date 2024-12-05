@@ -1,0 +1,88 @@
+Let's break down the database schema for the food ordering application. The schema consists of three main models: `Category`, `Item`, and `UserFeedback`. Here's an explanation of each model and their relationships:
+
+### 1. Category Model
+This model represents the different categories of food items (e.g., Main Course, Beverages, Salad).
+
+- **Fields**:
+  - `name`: A string field to store the name of the category.
+
+```python
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name
+```
+
+### 2. Item Model
+This model represents the individual food items available for ordering.
+
+- **Fields**:
+  - `name`: A string field to store the name of the item.
+  - `category`: A foreign key linking the item to a `Category`.
+  - `price`: A decimal field to store the price of the item.
+
+- **Relationships**:
+  - Each `Item` belongs to one `Category`.
+
+```python
+class Item(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=5, decimal_places=2)
+
+    def __str__(self):
+        return self.name
+```
+
+### 3. UserFeedback Model
+This model captures user feedback (like/dislike) for each item.
+
+- **Fields**:
+  - `user`: A foreign key linking the feedback to a `User`.
+  - `item`: A foreign key linking the feedback to an `Item`.
+  - `like`: A boolean field to indicate whether the user liked the item.
+
+- **Relationships**:
+  - Each `UserFeedback` entry is linked to one `User` and one `Item`.
+
+```python
+class UserFeedback(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    like = models.BooleanField()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.item.name} - {'Like' if self.like else 'Dislike'}"
+```
+
+### Database Schema Diagram
+Here's a simplified diagram of the database schema:
+
+```
+Category
+---------
+id (PK)
+name
+
+Item
+---------
+id (PK)
+name
+category_id (FK to Category)
+price
+
+UserFeedback
+---------
+id (PK)
+user_id (FK to User)
+item_id (FK to Item)
+like
+```
+
+### Relationships
+- **Category to Item**: One-to-Many (One category can have many items)
+- **User to UserFeedback**: One-to-Many (One user can give feedback on many items)
+- **Item to UserFeedback**: One-to-Many (One item can have feedback from many users)
+
+This schema allows us to categorize food items, store user feedback, and use this feedback to provide personalized recommendations. If you have any further questions or need more details, feel free to ask!
