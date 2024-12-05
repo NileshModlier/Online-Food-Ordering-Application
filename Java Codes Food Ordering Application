@@ -1,0 +1,231 @@
+Certainly! Let's continue building out the Java application for the online food ordering system. We'll add more functionality and provide additional code examples.
+
+### 1. Continue Main Application Logic
+
+#### Browsing Items and Adding to Cart
+```java
+private static void browseItems(Scanner scanner, User user) {
+    for (Category category : categories) {
+        System.out.println("\n" + category.getName());
+        for (Item item : category.getItems()) {
+            System.out.println("  " + item);
+        }
+    }
+    System.out.print("Enter item name to add to cart: ");
+    String itemName = scanner.nextLine();
+    Item item = findItemByName(itemName);
+    if (item != null) {
+        Order order = new Order(user);
+        order.addItem(item);
+        user.placeOrder(order);
+        orderQueue.enqueue(order);
+        System.out.println(itemName + " added to cart.");
+    } else {
+        System.out.println("Item not found.");
+    }
+}
+
+private static Item findItemByName(String itemName) {
+    for (Category category : categories) {
+        for (Item item : category.getItems()) {
+            if (item.getName().equalsIgnoreCase(itemName)) {
+                return item;
+            }
+        }
+    }
+    return null;
+}
+```
+
+#### Viewing Cart
+```java
+private static void viewCart(User user) {
+    if (!user.getOrders().isEmpty()) {
+        for (Order order : user.getOrders()) {
+            System.out.println(order);
+        }
+    } else {
+        System.out.println("Cart is empty.");
+    }
+}
+```
+
+#### Placing Order
+```java
+private static void placeOrder(User user) {
+    if (!user.getOrders().isEmpty()) {
+        for (Order order : user.getOrders()) {
+            order.setStatus("Placed");
+            orderHistory.push(order);
+        }
+        user.getOrders().clear();
+        System.out.println("Order placed successfully!");
+    } else {
+        System.out.println("Cart is empty.");
+    }
+}
+```
+
+#### Viewing Order History
+```java
+private static void viewOrderHistory() {
+    if (!orderHistory.isEmpty()) {
+        for (Order order : orderHistory.history) {
+            System.out.println(order);
+        }
+    } else {
+        System.out.println("No order history.");
+    }
+}
+```
+
+### 2. User Profile Management
+
+#### User Profile Class
+```java
+class UserProfile implements Serializable {
+    private String email;
+    private String address;
+
+    public UserProfile(String email, String address) {
+        this.email = email;
+        this.address = address;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    @Override
+    public String toString() {
+        return "Email: " + email + ", Address: " + address;
+    }
+}
+```
+
+#### Updating User Profile
+```java
+private static void updateUserProfile(Scanner scanner, User user) {
+    System.out.print("Enter new email: ");
+    String email = scanner.nextLine();
+    System.out.print("Enter new address: ");
+    String address = scanner.nextLine();
+    UserProfile profile = new UserProfile(email, address);
+    user.setProfile(profile);
+    System.out.println("Profile updated successfully!");
+}
+```
+
+### 3. Payment Integration
+
+#### Payment Class
+```java
+class Payment implements Serializable {
+    private String cardNumber;
+    private String cardHolderName;
+    private String expiryDate;
+    private String cvv;
+
+    public Payment(String cardNumber, String cardHolderName, String expiryDate, String cvv) {
+        this.cardNumber = cardNumber;
+        this.cardHolderName = cardHolderName;
+        this.expiryDate = expiryDate;
+        this.cvv = cvv;
+    }
+
+    public boolean processPayment(double amount) {
+        // Simulate payment processing
+        System.out.println("Processing payment of $" + amount + "...");
+        return true; // Assume payment is always successful for this example
+    }
+}
+```
+
+#### Checkout Process
+```java
+private static void checkout(Scanner scanner, User user) {
+    if (!user.getOrders().isEmpty()) {
+        System.out.print("Enter card number: ");
+        String cardNumber = scanner.nextLine();
+        System.out.print("Enter card holder name: ");
+        String cardHolderName = scanner.nextLine();
+        System.out.print("Enter expiry date (MM/YY): ");
+        String expiryDate = scanner.nextLine();
+        System.out.print("Enter CVV: ");
+        String cvv = scanner.nextLine();
+
+        Payment payment = new Payment(cardNumber, cardHolderName, expiryDate, cvv);
+        double totalAmount = user.getOrders().stream()
+                .flatMap(order -> order.getItems().stream())
+                .mapToDouble(Item::getPrice)
+                .sum();
+
+        if (payment.processPayment(totalAmount)) {
+            placeOrder(user);
+            System.out.println("Payment successful! Order placed.");
+        } else {
+            System.out.println("Payment failed. Please try again.");
+        }
+    } else {
+        System.out.println("Cart is empty.");
+    }
+}
+```
+
+### 4. Main Application Logic (Continued)
+```java
+private static void userMenu(Scanner scanner, User user) {
+    while (true) {
+        System.out.println("\n1. Browse Items\n2. View Cart\n3. Place Order\n4. View Order History\n5. Update Profile\n6. Checkout\n7. Logout");
+        String choice = scanner.nextLine();
+
+        switch (choice) {
+            case "1":
+                browseItems(scanner, user);
+                break;
+            case "2":
+                viewCart(user);
+                break;
+            case "3":
+                placeOrder(user);
+                break;
+            case "4":
+                viewOrderHistory();
+                break;
+            case "5":
+                updateUserProfile(scanner, user);
+                break;
+            case "6":
+                checkout(scanner, user);
+                break;
+            case "7":
+                System.out.println("Logged out.");
+                return;
+            default:
+                System.out.println("Invalid option. Please try again.");
+        }
+    }
+}
+```
+
+### Summary
+- **Browsing Items**: Users can browse items by category and add them to their cart.
+- **Viewing Cart**: Users can view items in their cart.
+- **Placing Orders**: Users can place orders, which are then added to the order history.
+- **Viewing Order History**: Users can view their past orders.
+- **User Profile Management**: Users can update their profile information.
+- **Payment Integration**: Users can checkout and process payments.
+
+These examples provide a comprehensive structure for the online food ordering application using Java. You can expand and customize it further based on your requirements. If you have any questions or need further assistance, feel free to ask!
